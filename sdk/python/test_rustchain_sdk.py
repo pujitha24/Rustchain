@@ -68,5 +68,28 @@ class TestRustChainClient:
         assert client.retry_count == 3
 
 
+class TestGetErrorDetail:
+    """GET failures must keep the backend error detail, like POST does"""
+
+    @pytest.mark.asyncio
+    async def test_get_preserves_error_body(self):
+        import httpx
+
+        detail = {"error": "fixture temporarily unavailable", "retry_after": 60}
+        client = RustChainClient(base_url="https://node.test")
+        client._client = httpx.AsyncClient(
+            base_url="https://node.test",
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(503, json=detail, request=request)
+            ),
+        )
+        async with client:
+            with pytest.raises(APIError) as exc:
+                await client.health()
+        assert exc.value.status_code == 503
+        assert "fixture temporarily unavailable" in str(exc.value)
+        assert exc.value.response_body == detail
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
