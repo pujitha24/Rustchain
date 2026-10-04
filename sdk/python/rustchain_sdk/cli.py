@@ -208,6 +208,7 @@ async def _wallet_send(
 # ─────────────────────────────────────────────────────────────────
 
 @main.command(name="node")
+@click.argument("action", required=False, type=click.Choice(["status"]))
 @click.option(
     "--node",
     default=DEFAULT_NODE_URL,
@@ -219,7 +220,7 @@ async def _wallet_send(
     is_flag=True,
     help="Output as JSON.",
 )
-def node_status(node: str, as_json: bool):
+def node_status(action: Optional[str], node: str, as_json: bool):
     """Check node health status."""
     asyncio.run(_node_status(node, as_json))
 
@@ -246,6 +247,7 @@ async def _node_status(node: str, as_json: bool):
 # ─────────────────────────────────────────────────────────────────
 
 @main.command(name="epoch")
+@click.argument("action", required=False, type=click.Choice(["info"]))
 @click.option(
     "--node",
     default=DEFAULT_NODE_URL,
@@ -257,7 +259,7 @@ async def _node_status(node: str, as_json: bool):
     is_flag=True,
     help="Output as JSON.",
 )
-def epoch_info(node: str, as_json: bool):
+def epoch_info(action: Optional[str], node: str, as_json: bool):
     """Get current epoch information."""
     asyncio.run(_epoch_info(node, as_json))
 
