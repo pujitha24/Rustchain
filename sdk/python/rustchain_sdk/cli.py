@@ -15,6 +15,7 @@ Usage:
 import asyncio
 import sys
 import json
+import math
 from typing import Optional
 
 import click
@@ -122,15 +123,25 @@ async def _wallet_balance(address: str, node: str, as_json: bool):
         sys.exit(1)
 
 
+def _finite_rtc(ctx, param, value):
+    """Reject nan/inf, which FloatRange's bounds checks let through."""
+    if not math.isfinite(value):
+        raise click.BadParameter("must be a finite number")
+    return value
+
+
 @wallet_group.command(name="send")
 @click.argument("from_address")
 @click.argument("to_address")
-@click.argument("amount", type=int)
+@click.argument(
+    "amount", type=click.FloatRange(min=0, min_open=True), callback=_finite_rtc
+)
 @click.option(
     "--fee",
-    type=int,
+    type=click.FloatRange(min=0),
+    callback=_finite_rtc,
     default=0,
-    help="Transaction fee.",
+    help="Transaction fee in RTC (fractions allowed).",
 )
 @click.option(
     "--seed",
@@ -152,13 +163,13 @@ async def _wallet_balance(address: str, node: str, as_json: bool):
 def wallet_send(
     from_address: str,
     to_address: str,
-    amount: int,
-    fee: int,
+    amount: float,
+    fee: float,
     seed_phrase: str,
     node: str,
     as_json: bool,
 ):
-    """Send RTC from one wallet to another."""
+    """Send AMOUNT RTC (fractions allowed) from one wallet to another."""
     words = seed_phrase.split()
     asyncio.run(_wallet_send(from_address, to_address, amount, fee, words, node, as_json))
 
@@ -166,8 +177,8 @@ def wallet_send(
 async def _wallet_send(
     from_address: str,
     to_address: str,
-    amount: int,
-    fee: int,
+    amount: float,
+    fee: float,
     seed_phrase: list,
     node: str,
     as_json: bool,
