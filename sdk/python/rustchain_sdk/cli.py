@@ -112,11 +112,18 @@ async def _wallet_balance(address: str, node: str, as_json: bool):
             if as_json:
                 click.echo(json.dumps(result, indent=2))
             else:
-                balance = result.get("balance", 0)
-                nonce = result.get("nonce", 0)
+                # amount_rtc is the canonical field; balance is a legacy alias.
+                balance = result.get("amount_rtc")
+                if balance is None:
+                    balance = result.get("balance")
+                nonce = result.get("nonce")
                 click.echo(f"Address:  {address}")
-                click.echo(f"Balance:  {balance} RTC")
-                click.echo(f"Nonce:    {nonce}")
+                if balance is None:
+                    click.echo("Balance:  unavailable (no amount_rtc in response)")
+                else:
+                    click.echo(f"Balance:  {balance} RTC")
+                if nonce is not None:
+                    click.echo(f"Nonce:    {nonce}")
     except RustChainError as e:
         click.echo(f"❌  Error: {e}", err=True)
         sys.exit(1)
