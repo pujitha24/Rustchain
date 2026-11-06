@@ -1542,7 +1542,7 @@ def epoch_weight_to_units(weight) -> int:
         value = Decimal(str(weight))
     except Exception:
         return 0
-    if value <= 0:
+    if not value.is_finite() or value <= 0:
         return 0
     units = int((value * Decimal(EPOCH_WEIGHT_SCALE)).to_integral_value(rounding=ROUND_HALF_UP))
     return max(0, units)

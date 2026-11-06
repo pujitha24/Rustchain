@@ -398,7 +398,9 @@ def enrollment_weight(hw_weight, status):
     try:
         weight = float(hw_weight)
     except (TypeError, ValueError):
-        return hw_weight
+        return 0.0
+    if not math.isfinite(weight):
+        return 0.0
     if needs_review(status):
         return 0.0
     if not isinstance(status, dict):
